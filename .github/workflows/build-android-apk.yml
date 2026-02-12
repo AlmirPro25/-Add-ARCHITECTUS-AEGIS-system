@@ -24,6 +24,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
     
+    - name: Make gradlew executable
+      run: chmod +x android-agent/gradlew
+    
     - name: Build Debug APK
       run: |
         cd android-agent
