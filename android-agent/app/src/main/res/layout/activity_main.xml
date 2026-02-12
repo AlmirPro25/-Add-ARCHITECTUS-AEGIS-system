@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#0A0E27">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AEGIS FIELD AGENT"
+            android:textColor="#00FF41"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="16dp"
+            android:background="#00FF41"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Server Configuration -->
+        <TextView
+            android:id="@+id/tvServerLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="C2 SERVER URL"
+            android:textColor="#00FF41"
+            android:textSize="14sp"
+            android:fontFamily="monospace"
+            app:layout_constraintTop_toBottomOf="@id/divider1"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/etServerUrl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="http://10.0.2.2:3000"
+            android:textColorHint="#4CAF50"
+            android:textColor="#00FF41"
+            android:background="@drawable/edit_text_background"
+            android:padding="12dp"
+            android:fontFamily="monospace"
+            android:inputType="textUri"
+            app:layout_constraintTop_toBottomOf="@id/tvServerLabel"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/btnSaveServer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="SAVE URL"
+            android:textColor="#0A0E27"
+            android:backgroundTint="#00FF41"
+            android:fontFamily="monospace"
+            app:layout_constraintTop_toBottomOf="@id/etServerUrl"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Registration Section -->
+        <LinearLayout
+            android:id="@+id/layoutRegistration"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/btnSaveServer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEVICE REGISTRATION"
+                android:textColor="#00FF41"
+                android:textSize="14sp"
+                android:fontFamily="monospace" />
+
+            <EditText
+                android:id="@+id/etDeviceName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Device Name (e.g., UNIT-ALPHA-01)"
+                android:textColorHint="#4CAF50"
+                android:textColor="#00FF41"
+                android:background="@drawable/edit_text_background"
+                android:padding="12dp"
+                android:fontFamily="monospace"
+                android:inputType="textCapCharacters" />
+
+            <Button
+                android:id="@+id/btnRegister"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="REGISTER DEVICE"
+                android:textColor="#0A0E27"
+                android:backgroundTint="#00FF41"
+                android:fontFamily="monospace" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                android:indeterminateTint="#00FF41" />
+
+        </LinearLayout>
+
+        <!-- Control Section -->
+        <LinearLayout
+            android:id="@+id/layoutControl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/btnSaveServer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEVICE STATUS"
+                android:textColor="#00FF41"
+                android:textSize="14sp"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/tvDeviceId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Device ID: N/A"
+                android:textColor="#4CAF50"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/tvDeviceName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Name: N/A"
+                android:textColor="#4CAF50"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Status: Registered"
+                android:textColor="#4CAF50"
+                android:textSize="12sp"
+                android:fontFamily="monospace" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="#00FF41" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SERVICE CONTROL"
+                android:textColor="#00FF41"
+                android:textSize="14sp"
+                android:fontFamily="monospace" />
+
+            <Button
+                android:id="@+id/btnStartService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="START AGENT SERVICE"
+                android:textColor="#0A0E27"
+                android:backgroundTint="#00FF41"
+                android:fontFamily="monospace" />
+
+            <Button
+                android:id="@+id/btnStopService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="STOP AGENT SERVICE"
+                android:textColor="#00FF41"
+                android:backgroundTint="#1A1E37"
+                android:fontFamily="monospace" />
+
+            <Button
+                android:id="@+id/btnClearData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="CLEAR ALL DATA"
+                android:textColor="#FF5252"
+                android:backgroundTint="#1A1E37"
+                android:fontFamily="monospace" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

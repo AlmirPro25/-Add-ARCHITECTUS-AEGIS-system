@@ -1,0 +1,37 @@
+
+{
+  "system_name": "M.T.D. - TACTICAL DEVICE MONITORING SYSTEM",
+  "architect": "ARCHITECTUS AEGIS",
+  "version": "2.0.4-RELEASE",
+  "architectural_style": "Event-Driven Monolith (Hybrid REST/WebSocket/WebRTC)",
+  "core_principles": [
+    "Secure Telemetry Transport (TLS/WSS)",
+    "Real-time Situational Awareness (<200ms latency)",
+    "Transient & Persistent State Management",
+    "Live Media Streaming (WebRTC)",
+    "Open Source Intelligence (OSINT) Integration"
+  ],
+  "tech_stack": {
+    "runtime": "Node.js (v18+)",
+    "framework": "Express.js + Socket.io (Dual-channel communication) + WebRTC Signaling",
+    "database": "SQLite (via Prisma ORM) - Optimized for local deployment/portability",
+    "frontend": "React, TailwindCSS, TypeScript, Zustand, Leaflet.js",
+    "media_streaming": "WebRTC (Peer-to-Peer Signaling via Socket.io)",
+    "osint_integration": "External APIs (simulated in backend for demo)"
+  },
+  "modules": {
+    "c2_server": {
+      "role": "Command & Control",
+      "responsibilities": ["Auth", "Device Handshake", "Telemetry Ingestion", "Dashboard Serving", "WebRTC Signaling", "OSINT Proxy"]
+    },
+    "field_agent": {
+      "role": "Data Acquisition",
+      "responsibilities": ["GPS Tracking", "Sensor Fusion (Gyro/Accel)", "A/V Capture", "Battery Health", "Screen Capture (browser tab)", "Real-time Streaming (WebRTC)"]
+    }
+  },
+  "security_protocols": {
+    "transport": "HTTPS/WSS Enforced",
+    "authentication": "Bearer Token (JWT) for API, Handshake Auth for Sockets",
+    "cors_policy": "Strict Origin"
+  }
+}

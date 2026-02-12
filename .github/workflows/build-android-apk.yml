@@ -1,0 +1,47 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'android-agent/**'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x android-agent/gradlew
+    
+    - name: Build Debug APK
+      run: |
+        cd android-agent
+        ./gradlew assembleDebug --stacktrace
+    
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: aegis-field-agent-debug
+        path: android-agent/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+    
+    - name: Build info
+      run: |
+        echo "APK Size:"
+        ls -lh android-agent/app/build/outputs/apk/debug/app-debug.apk
+        echo ""
+        echo "Build successful! Download the APK from the Artifacts section above."

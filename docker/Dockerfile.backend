@@ -1,0 +1,67 @@
+
+# ==========================================
+# STAGE 1: BUILDER (Tactical Compilation)
+# ==========================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependências de sistema necessárias para compilação (se houver gyp/native modules)
+# g++ and python are often needed for some npm packages with native bindings (e.g., bcrypt)
+RUN apk add --no-cache python3 make g++
+
+# Copiar manifestos de dependência
+# Estrutura assume monorepo ou pastas adjacentes: backend/ e shared/
+COPY backend/package*.json ./backend/
+COPY shared/package*.json ./shared/
+
+# Instalar dependências (Clean Install para consistência)
+WORKDIR /app/backend
+RUN npm ci
+
+# Copiar código fonte
+COPY backend/ ./
+COPY shared/ ../shared/
+
+# Gerar cliente Prisma (Database Client)
+RUN npx prisma generate
+
+# Compilar TypeScript para JavaScript (Build Artifact)
+RUN npm run build
+
+# ==========================================
+# STAGE 2: RUNNER (Production Runtime)
+# ==========================================
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Criar usuário não-root para segurança
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001 nodejs
+
+# Copiar apenas os artefatos necessários do Stage 1
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/package*.json ./
+COPY --from=builder /app/backend/prisma ./prisma
+COPY --from=builder /app/backend/node_modules ./node_modules
+
+# Criar diretório para uploads e garantir que o usuário nodejs tenha permissão
+RUN mkdir -p uploads && chown -R nodejs:nodejs uploads
+# Database volume needs permissions too
+RUN mkdir -p prisma/db && chown -R nodejs:nodejs prisma/db
+
+
+USER nodejs
+
+EXPOSE 3000
+
+# Healthcheck tático
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+# Comando de inicialização: Migrações + Start
+# Ensure prisma/db directory is used for sqlite persistence
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

@@ -1,0 +1,125 @@
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # TACTICAL BACKEND (C2 SERVER)
+  # ==========================================
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+      # In development, we don't use a separate runner target; 
+      # we run directly from source with ts-node-dev for hot-reloads.
+      # target: builder # Remove target: builder to use multi-stage in dev for better dependency handling
+    command: npm run dev
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./backend/package.json:/app/backend/package.json # Keep package.json synced
+      - ./backend/tsconfig.json:/app/backend/tsconfig.json # Keep tsconfig.json synced
+      - ./shared:/app/shared
+      - /app/backend/node_modules # Avoid mapping node_modules from host to prevent conflicts
+      - ./prisma/db:/app/prisma/db # Persist SQLite DB for dev
+      - ./backend/uploads:/app/uploads # Persist uploaded files in dev
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    networks:
+      - tactical_net
+    healthcheck: # Ensure backend is ready before frontend starts
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ==========================================
+  # MISSION CONTROL (FRONTEND)
+  # ==========================================
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+      # In development, we use the builder target to install deps,
+      # but then override command to run Vite dev server.
+      # This is different from `docker-compose.prod.yml` which uses the `runner` Nginx stage.
+      target: builder 
+    command: npm run dev -- --host 0.0.0.0 # Binds to all interfaces
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/index.html:/app/frontend/index.html
+      - ./frontend/package.json:/app/frontend/package.json
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      - ./frontend/tailwind.config.js:/app/frontend/tailwind.config.js
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+      - ./shared:/app/shared
+      - /app/frontend/node_modules # Avoid mapping node_modules from host
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://backend:3000/api/v1 # Frontend dev server talks to backend service
+      - VITE_WS_URL=ws://backend:3000 # Frontend dev server talks to backend for websockets
+    depends_on:
+      backend:
+        condition: service_healthy # Wait for backend to be healthy
+    networks:
+      - tactical_net
+
+networks:
+  tactical_net:
+    driver: bridge
+```
+
+<script type="text/plain" data-path="docker-compose.prod.yml">
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+      target: runner # Use the optimized runner stage for production
+    restart: always
+    volumes:
+      - tactical_db_data:/app/prisma/db # Persist SQLite database
+      - tactical_uploads:/app/uploads # Persist uploaded media
+    environment:
+      - DATABASE_URL=file:/app/prisma/db/tactical_db.sqlite
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3000
+      - FRONTEND_URL=http://localhost # Or your public frontend URL
+    networks:
+      - tactical_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+      target: nginx # Use the Nginx stage for production
+    restart: always
+    ports:
+      - "80:80" # Expose port 80 for the Nginx server
+    environment: # Nginx doesn't use these env vars directly, but good for context
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy # Ensure backend is ready for proxying
+    networks:
+      - tactical_net
+
+volumes:
+  tactical_db_data:
+  tactical_uploads:
+
+networks:
+  tactical_net:
+    driver: bridge

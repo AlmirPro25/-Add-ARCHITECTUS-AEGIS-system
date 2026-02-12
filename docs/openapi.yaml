@@ -1,0 +1,248 @@
+
+openapi: 3.0.3
+info:
+  title: M.T.D. Command Interface API
+  description: API contracts for the Tactical Device Monitoring System.
+  version: 2.0.4
+  contact:
+    name: Architectus Aegis
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local C2 Node
+paths:
+  /auth/register-device:
+    post:
+      summary: Register a new Field Device
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceName:
+                  type: string
+                  example: "UNIT-ALPHA-01"
+                deviceType:
+                  type: string
+                  enum: [ANDROID, IOS, WEB_AGENT, GENERIC]
+      responses:
+        '201':
+          description: Device registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT for subsequent authenticated requests
+                  deviceId:
+                    type: string
+                    format: uuid
+                  device:
+                    $ref: '#/components/schemas/DeviceStatusFull' # Returns full device on registration
+  
+  /telemetry/snapshot:
+    post:
+      summary: Upload a static snapshot (Image/Audio clip)
+      tags: [Telemetry]
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                meta:
+                  type: string
+                  description: JSON string containing lat/long/timestamp/type (image/audio)
+      responses:
+        '200':
+          description: Evidence uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "uploaded"
+                  path:
+                    type: string
+                    example: "/uploads/16788888888-image.jpg"
+
+  /devices/list:
+    get:
+      summary: List all active tactical units (Dashboard View)
+      tags: [Command]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of devices and their last known status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceStatusFull' # Returns full device info
+                  
+
+  /devices/{id}/logs:
+    get:
+      summary: Retrieve mission logs for a specific device.
+      tags: [Command]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The device ID to retrieve logs for.
+      responses:
+        '200':
+          description: List of device logs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissionLog'
+        '404':
+          description: Device not found.
+
+  /osint/search:
+    get:
+      summary: Perform Open Source Intelligence search.
+      tags: [OSINT]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query (e.g., person's name, email, alias).
+      responses:
+        '200':
+          description: OSINT search results.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OsintSearchResult'
+        '400':
+          description: Invalid query.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DeviceStatusFull:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        name:
+          type: string
+          example: "UNIT-ALPHA-01"
+        type:
+          type: string
+          enum: [ANDROID, IOS, WEB_AGENT, GENERIC]
+          example: "WEB_AGENT"
+        isOnline:
+          type: boolean
+          example: true
+        lastBattery:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 85
+        lastLat:
+          type: number
+          format: float
+          nullable: true
+          example: 34.0522
+        lastLng:
+          type: number
+          format: float
+          nullable: true
+          example: -118.2437
+        lastIp:
+          type: string
+          nullable: true
+          example: "192.168.1.100"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-11-20T10:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-10-01T08:00:00Z"
+          
+    MissionLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
+        deviceId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-11-20T10:05:30Z"
+        level:
+          type: string
+          enum: [INFO, WARN, CRITICAL]
+          example: "INFO"
+        message:
+          type: string
+          example: "Device heartbeat received."
+
+    OsintSearchResult:
+      type: object
+      properties:
+        source:
+          type: string
+          example: "Public Social Media Profiles"
+        type:
+          type: string
+          example: "Profile Match"
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            username:
+              type: string
+              example: "johndoe123"
+            url:
+              type: string
+              format: url
+              example: "https://example.com/johndoe123"
+            match_confidence:
+              type: number
+              format: float
+              example: 0.85
